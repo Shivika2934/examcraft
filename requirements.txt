@@ -4,5 +4,5 @@ sqlalchemy
 flask_login
 flask_dance
 openai
-psycopg2-binary  # if using Postgres
+psycopg2-binary
 gunicorn

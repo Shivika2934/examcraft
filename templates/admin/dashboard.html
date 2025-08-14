@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i data-feather="settings" class="me-2"></i>
+            Admin Dashboard
+        </h1>
+        <div>
+            <a href="{{ url_for('manage_users') }}" class="btn btn-secondary me-2">
+                <i data-feather="users" class="me-2"></i>
+                Manage Users
+            </a>
+            <a href="{{ url_for('create_exam') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-2"></i>
+                Create New Exam
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="file-text" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ exams|length }}</h5>
+                    <p class="card-text text-muted">Total Exams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="check-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ exams|selectattr('is_published')|list|length }}</h5>
+                    <p class="card-text text-muted">Published Exams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="book" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ subjects|length }}</h5>
+                    <p class="card-text text-muted">Subjects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ total_users }}</h5>
+                    <p class="card-text text-muted">Total Users</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Role Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="settings" class="mb-2" style="width: 24px; height: 24px;"></i>
+                    <h6 class="card-title">{{ admin_users }}</h6>
+                    <p class="card-text text-muted small">Administrators</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="user" class="mb-2" style="width: 24px; height: 24px;"></i>
+                    <h6 class="card-title">{{ student_users }}</h6>
+                    <p class="card-text text-muted small">Students</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exams List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="list" class="me-2"></i>
+                        Your Exams
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exams %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Subject</th>
+                                        <th>Difficulty</th>
+                                        <th>Duration</th>
+                                        <th>Questions</th>
+                                        <th>Status</th>
+                                        <th>Attempts</th>
+                                        <th>Avg Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exam in exams %}
+                                        {% set stats = exam_stats.get(exam.id, {}) %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ exam.title }}</strong>
+                                                {% if exam.description %}
+                                                    <br>
+                                                    <small class="text-muted">{{ exam.description[:50] }}...</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ exam.subject.name }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if exam.difficulty_level == 'easy' %}success{% elif exam.difficulty_level == 'medium' %}warning{% else %}danger{% endif %}">
+                                                    {{ exam.difficulty_level.title() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ exam.duration_minutes }} min</td>
+                                            <td>
+                                                {% set actual_questions = exam.questions|length %}
+                                                {{ actual_questions }}/{{ exam.total_questions }}
+                                                {% if actual_questions == 0 %}
+                                                    <span class="badge bg-danger ms-1">No Questions</span>
+                                                {% elif actual_questions < exam.total_questions %}
+                                                    <span class="badge bg-warning ms-1">Incomplete</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if exam.is_published %}
+                                                    <span class="badge bg-success">Published</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Draft</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ stats.get('total_attempts', 0) }}</td>
+                                            <td>
+                                                {% if stats.get('average_score') %}
+                                                    {{ "%.1f"|format(stats.get('average_score', 0)) }}%
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    {% if exam.is_published %}
+                                                        <a href="{{ url_for('unpublish_exam', exam_id=exam.id) }}" 
+                                                           class="btn btn-sm btn-outline-warning" 
+                                                           title="Unpublish">
+                                                            <i data-feather="eye-off"></i>
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('publish_exam', exam_id=exam.id) }}" 
+                                                           class="btn btn-sm btn-outline-success" 
+                                                           title="Publish">
+                                                            <i data-feather="eye"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    
+                                                    <a href="{{ url_for('view_exam_results', exam_id=exam.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary" 
+                                                       title="View Results">
+                                                        <i data-feather="bar-chart-2"></i>
+                                                    </a>
+                                                    
+                                                    {% set question_count = exam.questions|length %}
+                                                    {% if question_count == 0 %}
+                                                        <a href="{{ url_for('regenerate_questions', exam_id=exam.id) }}" 
+                                                           class="btn btn-sm btn-warning" 
+                                                           title="Generate Questions"
+                                                           onclick="return confirm('Generate questions for this exam?')">
+                                                            <i data-feather="refresh-cw"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="file-plus" class="mb-3" style="width: 48px; height: 48px; color: var(--bs-secondary);"></i>
+                            <h6>No exams created yet</h6>
+                            <p class="text-muted">Create your first exam to get started with AI-powered question generation.</p>
+                            <a href="{{ url_for('create_exam') }}" class="btn btn-primary">
+                                <i data-feather="plus" class="me-2"></i>
+                                Create Your First Exam
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Auto-refresh statistics every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

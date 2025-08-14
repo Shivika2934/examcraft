@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row justify-content-center text-center mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-4 mb-4">AI-Powered Digital Examination System</h1>
+            <p class="lead text-muted mb-4">
+                Experience the future of education with our intelligent exam platform featuring 
+                AI-generated questions, automated evaluation, and comprehensive analytics.
+            </p>
+            
+            {% if not current_user.is_authenticated %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-primary btn-lg me-md-2">
+                        <i data-feather="settings" class="me-2"></i>
+                        Admin Login
+                    </a>
+                    <a href="{{ url_for('student_login') }}" class="btn btn-outline-primary btn-lg">
+                        <i data-feather="user" class="me-2"></i>
+                        Student Login
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- System Architecture Diagram -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i data-feather="cpu" class="me-2"></i>
+                        System Architecture
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="mermaid-container">
+                        <pre class="mermaid">
+graph TB
+    subgraph "Frontend Layer"
+        A[Web Interface - HTML/CSS/JS]
+        B[Admin Dashboard]
+        C[Student Exam Interface]
+        D[Mobile Responsive UI]
+    end
+    
+    subgraph "Authentication"
+        E[Replit OAuth]
+        F[Role-Based Access Control]
+    end
+    
+    subgraph "Backend Services"
+        G[Flask Application Server]
+        H[Exam Management Service]
+        I[AI Question Generator]
+        J[Evaluation Engine]
+        K[Timer & Anti-Cheat Service]
+    end
+    
+    subgraph "AI Integration"
+        L[OpenAI API]
+        M[Question Generation]
+        N[Answer Evaluation]
+        O[Question Variations]
+    end
+    
+    subgraph "Data Layer"
+        P[SQLite Database]
+        Q[User Management]
+        R[Exam Storage]
+        S[Results Analytics]
+    end
+    
+    subgraph "Security & Integrity"
+        T[Session Management]
+        U[Question Randomization]
+        V[Tab Switch Detection]
+        W[Time Validation]
+    end
+    
+    A --> G
+    B --> H
+    C --> K
+    D --> G
+    E --> F
+    F --> G
+    G --> H
+    G --> I
+    G --> J
+    H --> P
+    I --> L
+    J --> L
+    L --> M
+    L --> N
+    L --> O
+    P --> Q
+    P --> R
+    P --> S
+    G --> T
+    K --> U
+    K --> V
+    K --> W
+    
+    classDef frontend fill:#e1f5fe
+    classDef backend fill:#f3e5f5
+    classDef ai fill:#e8f5e8
+    classDef data fill:#fff3e0
+    classDef security fill:#ffebee
+    
+    class A,B,C,D frontend
+    class G,H,I,J,K backend
+    class L,M,N,O ai
+    class P,Q,R,S data
+    class T,U,V,W security
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Key Features</h2>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="brain" class="mb-3" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">AI Question Generation</h5>
+                    <p class="card-text">Automatically generate unique questions using advanced AI models with customizable difficulty levels.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="users" class="mb-3" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">Smart Role Assignment</h5>
+                    <p class="card-text">Automatic role assignment based on email patterns, with separate admin and student interfaces. First user becomes admin automatically.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="clock" class="mb-3" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">Timed Exams</h5>
+                    <p class="card-text">Built-in timer functionality with automatic submission and real-time countdown display.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="shield" class="mb-3" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">Anti-Cheat Measures</h5>
+                    <p class="card-text">Question randomization, tab switching detection, and secure session management.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">How It Works</h2>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="settings" class="me-2"></i>
+                        For Administrators
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ol class="list-unstyled">
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">1</span>
+                            Login and get auto-assigned admin role (or switch roles)
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">2</span>
+                            Create new exams with subject and difficulty selection
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">3</span>
+                            AI automatically generates relevant questions
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">4</span>
+                            Review and publish exams for students
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">5</span>
+                            Monitor results and view detailed analytics
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="user" class="me-2"></i>
+                        For Students
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ol class="list-unstyled">
+                        <li class="mb-2">
+                            <span class="badge bg-success me-2">1</span>
+                            Login and get auto-assigned student role
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-success me-2">2</span>
+                            Start an exam when ready
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-success me-2">3</span>
+                            Answer questions within the time limit
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-success me-2">4</span>
+                            Submit exam for automated evaluation
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-success me-2">5</span>
+                            View results and performance feedback
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i data-feather="layers" class="me-2"></i>
+                        Technology Stack
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>Backend</h6>
+                            <ul class="list-unstyled">
+                                <li>• Flask (Python)</li>
+                                <li>• SQLite Database</li>
+                                <li>• OpenAI Integration</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Frontend</h6>
+                            <ul class="list-unstyled">
+                                <li>• HTML5 & CSS3</li>
+                                <li>• Bootstrap 5</li>
+                                <li>• Vanilla JavaScript</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Authentication</h6>
+                            <ul class="list-unstyled">
+                                <li>• OAuth 2.0</li>
+                                <li>• Session Management</li>
+                                <li>• Role-Based Access</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>AI Features</h6>
+                            <ul class="list-unstyled">
+                                <li>• Question Generation</li>
+                                <li>• Auto Evaluation</li>
+                                <li>• Content Variations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Mermaid for diagram rendering -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({ 
+        startOnLoad: true,
+        theme: 'dark',
+        themeVariables: {
+            darkMode: true,
+            primaryColor: '#6f42c1',
+            primaryTextColor: '#ffffff',
+            primaryBorderColor: '#495057',
+            lineColor: '#6c757d',
+            secondaryColor: '#495057',
+            tertiaryColor: '#343a40'
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>
+                <i data-feather="user" class="me-2"></i>
+                Student Dashboard
+            </h1>
+            <p class="text-muted mb-0">Welcome, {{ current_user.first_name or current_user.email }}!</p>
+        </div>
+    </div>
+
+    <!-- Active Exam Sessions -->
+    {% if active_sessions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                <i data-feather="clock" class="me-2"></i>
+                <strong>Active Exam Sessions</strong> - You have ongoing exams that need to be completed.
+            </div>
+            {% for session in active_sessions %}
+                <div class="card border-warning mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title mb-1">{{ session.exam.title }}</h5>
+                                <p class="card-text text-muted mb-2">{{ session.exam.subject.name }}</p>
+                                <small class="text-muted">
+                                    Started: {{ session.start_time.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                            <a href="{{ url_for('take_exam', session_id=session.id) }}" class="btn btn-warning">
+                                <i data-feather="play" class="me-2"></i>
+                                Continue Exam
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="file-text" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ available_exams|length }}</h5>
+                    <p class="card-text text-muted">Available Exams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="check-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ exam_history|length }}</h5>
+                    <p class="card-text text-muted">Completed Exams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="trending-up" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">
+                        {% if exam_history %}
+                            {{ "%.1f"|format(exam_history|map(attribute='score')|sum / exam_history|length) }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h5>
+                    <p class="card-text text-muted">Average Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="award" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">
+                        {% if exam_history %}
+                            {{ "%.1f"|format(exam_history|map(attribute='score')|max) }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h5>
+                    <p class="card-text text-muted">Best Score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Exams -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="book-open" class="me-2"></i>
+                        Available Exams
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if available_exams %}
+                        <div class="row">
+                            {% for exam in available_exams %}
+                                {% set already_taken = exam_history|selectattr('exam_id', 'equalto', exam.id)|list %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100 {% if already_taken %}border-success{% endif %}">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title">{{ exam.title }}</h6>
+                                                {% if already_taken %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <p class="card-text text-muted small mb-2">{{ exam.subject.name }}</p>
+                                            
+                                            {% if exam.description %}
+                                                <p class="card-text small">{{ exam.description[:100] }}...</p>
+                                            {% endif %}
+                                            
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Questions</small>
+                                                    <br>
+                                                    <strong>{{ exam.total_questions }}</strong>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Duration</small>
+                                                    <br>
+                                                    <strong>{{ exam.duration_minutes }}m</strong>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Level</small>
+                                                    <br>
+                                                    <span class="badge bg-{% if exam.difficulty_level == 'easy' %}success{% elif exam.difficulty_level == 'medium' %}warning{% else %}danger{% endif %}">
+                                                        {{ exam.difficulty_level.title() }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if already_taken %}
+                                                <div class="d-grid gap-2">
+                                                    <a href="{{ url_for('view_results', session_id=already_taken[0].id) }}" 
+                                                       class="btn btn-outline-success btn-sm">
+                                                        <i data-feather="eye" class="me-1"></i>
+                                                        View Results ({{ "%.1f"|format(already_taken[0].score) }}%)
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <div class="d-grid gap-2">
+                                                    <a href="{{ url_for('start_exam', exam_id=exam.id) }}" 
+                                                       class="btn btn-primary btn-sm">
+                                                        <i data-feather="play" class="me-1"></i>
+                                                        Start Exam
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="calendar" class="mb-3" style="width: 48px; height: 48px; color: var(--bs-secondary);"></i>
+                            <h6>No exams available</h6>
+                            <p class="text-muted">There are currently no published exams. Check back later!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam History -->
+    {% if exam_history %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="history" class="me-2"></i>
+                        Recent Exam History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Exam</th>
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Date Taken</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in exam_history[:10] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ session.exam.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ session.exam.total_questions }} questions</small>
+                                        </td>
+                                        <td>{{ session.exam.subject.name }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 6px;">
+                                                    <div class="progress-bar 
+                                                                {% if session.score >= 90 %}bg-success
+                                                                {% elif session.score >= 80 %}bg-info
+                                                                {% elif session.score >= 70 %}bg-warning
+                                                                {% elif session.score >= 60 %}bg-primary
+                                                                {% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ session.score }}%"></div>
+                                                </div>
+                                                <strong>{{ "%.1f"|format(session.score) }}%</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if session.score >= 90 %}
+                                                <span class="badge bg-success">A+</span>
+                                            {% elif session.score >= 80 %}
+                                                <span class="badge bg-info">A</span>
+                                            {% elif session.score >= 70 %}
+                                                <span class="badge bg-warning">B</span>
+                                            {% elif session.score >= 60 %}
+                                                <span class="badge bg-primary">C</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">F</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ session.end_time.strftime('%Y-%m-%d') if session.end_time else '-' }}</td>
+                                        <td>
+                                            <a href="{{ url_for('view_results', session_id=session.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i data-feather="eye" class="me-1"></i>
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Auto-refresh dashboard every 30 seconds to check for new exams
+    setInterval(function() {
+        // Only refresh if no active exam sessions
+        if ({{ active_sessions|length }} === 0) {
+            location.reload();
+        }
+    }, 30000);
+</script>
+{% endblock %}

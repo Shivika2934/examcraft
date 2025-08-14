@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exam_session.exam.title }} - AI Exam System{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+<meta name="exam-session-id" content="{{ exam_session.id }}">
+<meta name="exam-duration" content="{{ exam_session.exam.duration_minutes }}">
+<meta name="time-remaining" content="{{ time_remaining }}">
+{% endblock %}
+
+{% block content %}
+<div class="exam-container">
+    <!-- Exam Header with Timer -->
+    <div class="exam-header fixed-top bg-dark border-bottom">
+        <div class="container-fluid">
+            <div class="row align-items-center py-3">
+                <div class="col-md-8">
+                    <h5 class="mb-0">
+                        <i data-feather="file-text" class="me-2"></i>
+                        {{ exam_session.exam.title }}
+                    </h5>
+                    <small class="text-muted">{{ exam_session.exam.subject.name }} - {{ exam_session.exam.difficulty_level.title() }} Level</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="exam-timer">
+                        <div class="d-flex align-items-center justify-content-end">
+                            <i data-feather="clock" class="me-2"></i>
+                            <div>
+                                <div id="timer-display" class="timer-display">
+                                    <span id="timer-minutes">--</span>:<span id="timer-seconds">--</span>
+                                </div>
+                                <div class="timer-progress">
+                                    <div class="progress" style="height: 4px;">
+                                        <div id="timer-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Content -->
+    <div class="exam-content">
+        <div class="container-fluid">
+            <form id="exam-form" method="POST" action="{{ url_for('submit_exam', session_id=exam_session.id) }}">
+                <div class="row">
+                    <!-- Questions Panel -->
+                    <div class="col-lg-9">
+                        <div class="questions-container">
+                            {% for question in questions %}
+                                <div class="question-card card mb-4" id="question-{{ question.id }}">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                Question {{ loop.index }} of {{ questions|length }}
+                                            </h6>
+                                            <span class="badge bg-secondary">{{ question.points }} point{{ 's' if question.points != 1 else '' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="question-text mb-4">
+                                            {{ question.question_text }}
+                                        </div>
+                                        
+                                        {% if question.question_type == 'multiple_choice' %}
+                                            <div class="options">
+                                                {% set options = [
+                                                    ('A', question.option_a),
+                                                    ('B', question.option_b),
+                                                    ('C', question.option_c),
+                                                    ('D', question.option_d)
+                                                ] %}
+                                                {% for option_key, option_text in options %}
+                                                    {% if option_text %}
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input question-input" 
+                                                                   type="radio" 
+                                                                   name="question_{{ question.id }}" 
+                                                                   id="q{{ question.id }}_{{ option_key }}" 
+                                                                   value="{{ option_key }}"
+                                                                   data-question-id="{{ question.id }}"
+                                                                   {% if existing_answers.get(question.id) == option_key %}checked{% endif %}>
+                                                            <label class="form-check-label option-label" for="q{{ question.id }}_{{ option_key }}">
+                                                                <strong>{{ option_key }}.</strong> {{ option_text }}
+                                                            </label>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% elif question.question_type == 'true_false' %}
+                                            <div class="options">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input question-input" 
+                                                           type="radio" 
+                                                           name="question_{{ question.id }}" 
+                                                           id="q{{ question.id }}_true" 
+                                                           value="True"
+                                                           data-question-id="{{ question.id }}"
+                                                           {% if existing_answers.get(question.id) == 'True' %}checked{% endif %}>
+                                                    <label class="form-check-label option-label" for="q{{ question.id }}_true">
+                                                        <strong>True</strong>
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input question-input" 
+                                                           type="radio" 
+                                                           name="question_{{ question.id }}" 
+                                                           id="q{{ question.id }}_false" 
+                                                           value="False"
+                                                           data-question-id="{{ question.id }}"
+                                                           {% if existing_answers.get(question.id) == 'False' %}checked{% endif %}>
+                                                    <label class="form-check-label option-label" for="q{{ question.id }}_false">
+                                                        <strong>False</strong>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% elif question.question_type == 'short_answer' %}
+                                            <div class="form-group">
+                                                <textarea class="form-control question-input" 
+                                                          name="question_{{ question.id }}" 
+                                                          id="q{{ question.id }}_text" 
+                                                          rows="4" 
+                                                          placeholder="Enter your answer here..."
+                                                          data-question-id="{{ question.id }}">{{ existing_answers.get(question.id, '') }}</textarea>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Navigation Panel -->
+                    <div class="col-lg-3">
+                        <div class="navigation-panel">
+                            <div class="card sticky-top" style="top: 120px;">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i data-feather="navigation" class="me-2"></i>
+                                        Question Navigator
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="question-grid">
+                                        {% for question in questions %}
+                                            <button type="button" 
+                                                    class="btn btn-outline-secondary btn-sm question-nav-btn" 
+                                                    data-question-id="{{ question.id }}"
+                                                    data-question-number="{{ loop.index }}">
+                                                {{ loop.index }}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <div class="progress-info">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="text-muted">Progress</small>
+                                                <small id="progress-text">0 / {{ questions|length }}</small>
+                                            </div>
+                                            <div class="progress mb-3" style="height: 8px;">
+                                                <div id="progress-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="legend mb-3">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="legend-color bg-success me-2"></div>
+                                                <small>Answered</small>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="legend-color bg-primary me-2"></div>
+                                                <small>Current</small>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <div class="legend-color bg-secondary me-2"></div>
+                                                <small>Unanswered</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="review-btn" class="btn btn-outline-warning" disabled>
+                                            <i data-feather="eye" class="me-2"></i>
+                                            Review Answers
+                                        </button>
+                                        <button type="submit" id="submit-btn" class="btn btn-primary" disabled>
+                                            <i data-feather="send" class="me-2"></i>
+                                            Submit Exam
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    Submit Exam
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your exam? Once submitted, you cannot make any changes.</p>
+                <div class="alert alert-info">
+                    <strong>Summary:</strong>
+                    <br>
+                    <span id="answered-count">0</span> of {{ questions|length }} questions answered
+                    <br>
+                    <span id="time-remaining-text"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirm-submit" class="btn btn-primary">
+                    <i data-feather="send" class="me-2"></i>
+                    Yes, Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Switch Warning Modal -->
+<div class="modal fade" id="tabSwitchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    Tab Switch Detected
+                </h5>
+            </div>
+            <div class="modal-body">
+                <p class="text-warning">
+                    <strong>Warning:</strong> You switched tabs or minimized the browser during the exam. 
+                    This activity has been logged for review.
+                </p>
+                <p>Please stay focused on the exam to avoid further warnings.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal">
+                    I Understand
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+{% endblock %}

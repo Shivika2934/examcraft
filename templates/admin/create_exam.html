@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Create Exam - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i data-feather="plus-circle" class="me-2"></i>
+                        Create New Exam
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="create-exam-form">
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="title" class="form-label">Exam Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required 
+                                       placeholder="e.g., Mathematics Quiz - Chapter 5">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                          placeholder="Brief description of the exam content and objectives"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Subject and Topic -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <input list="subjects" class="form-control" id="subject" name="subject" required 
+                                       placeholder="Enter or select subject">
+                                <datalist id="subjects">
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.name }}">
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="topic" class="form-label">Topic *</label>
+                                <input type="text" class="form-control" id="topic" name="topic" required 
+                                       placeholder="e.g., Algebra, Calculus, Linear Equations">
+                            </div>
+                        </div>
+
+                        <!-- Exam Settings -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="difficulty" class="form-label">Difficulty Level *</label>
+                                <select class="form-select" id="difficulty" name="difficulty" required>
+                                    <option value="">Select difficulty</option>
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="duration" class="form-label">Duration (minutes) *</label>
+                                <input type="number" class="form-control" id="duration" name="duration" 
+                                       value="60" min="5" max="300" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="num_questions" class="form-label">Number of Questions *</label>
+                                <input type="number" class="form-control" id="num_questions" name="num_questions" 
+                                       value="10" min="1" max="50" required>
+                            </div>
+                        </div>
+
+                        <!-- AI Settings -->
+                        <div class="card bg-primary bg-opacity-10 border-primary mb-4">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i data-feather="cpu" class="me-2"></i>
+                                    AI Question Generation
+                                </h6>
+                                <p class="card-text small">
+                                    Our AI will automatically generate unique questions based on your subject, topic, and difficulty level. 
+                                    The questions will be created using advanced language models to ensure quality and relevance.
+                                </p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="generate_variations" name="generate_variations" checked>
+                                    <label class="form-check-label" for="generate_variations">
+                                        Generate question variations to prevent cheating
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left" class="me-2"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="loading-spinner"></span>
+                                <i data-feather="plus" class="me-2" id="submit-icon"></i>
+                                Create Exam
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- AI Generation Info -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info bg-opacity-10">
+                    <h6 class="card-title mb-0">
+                        <i data-feather="info" class="me-2"></i>
+                        How AI Question Generation Works
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>What the AI considers:</h6>
+                            <ul class="list-unstyled">
+                                <li><i data-feather="check" class="me-2 text-success"></i>Subject expertise and curriculum</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Topic-specific concepts and theories</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Appropriate difficulty progression</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Learning objectives and outcomes</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Question features:</h6>
+                            <ul class="list-unstyled">
+                                <li><i data-feather="check" class="me-2 text-success"></i>Multiple choice with 4 options</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Clear and unambiguous wording</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Balanced distractors</li>
+                                <li><i data-feather="check" class="me-2 text-success"></i>Automated answer validation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('create-exam-form').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('loading-spinner');
+    const icon = document.getElementById('submit-icon');
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+    icon.classList.add('d-none');
+    submitBtn.innerHTML = submitBtn.innerHTML.replace('Create Exam', 'Generating Questions...');
+    
+    // Add a note about the AI generation process
+    const form = e.target;
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-info mt-3';
+    notification.innerHTML = `
+        <i data-feather="clock" class="me-2"></i>
+        <strong>AI is generating your questions...</strong> This may take 30-60 seconds depending on complexity.
+    `;
+    form.appendChild(notification);
+    feather.replace();
+});
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('create-exam-form');
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+});
+
+// Topic suggestions based on subject
+document.getElementById('subject').addEventListener('input', function() {
+    const subject = this.value.toLowerCase();
+    const topicField = document.getElementById('topic');
+    
+    const topicSuggestions = {
+        'mathematics': ['Algebra', 'Calculus', 'Geometry', 'Statistics', 'Trigonometry'],
+        'physics': ['Mechanics', 'Thermodynamics', 'Electromagnetism', 'Optics', 'Quantum Physics'],
+        'chemistry': ['Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry', 'Biochemistry'],
+        'biology': ['Cell Biology', 'Genetics', 'Evolution', 'Ecology', 'Molecular Biology'],
+        'computer science': ['Data Structures', 'Algorithms', 'Database Systems', 'Web Development', 'Machine Learning'],
+        'history': ['Ancient History', 'Medieval History', 'Modern History', 'World Wars', 'Civil Rights'],
+        'literature': ['Poetry Analysis', 'Novel Studies', 'Drama', 'Literary Criticism', 'Creative Writing']
+    };
+    
+    if (topicSuggestions[subject]) {
+        topicField.placeholder = 'e.g., ' + topicSuggestions[subject].join(', ');
+    }
+});
+</script>
+{% endblock %}

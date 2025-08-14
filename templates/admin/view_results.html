@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Exam Results - {{ exam.title }} - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>
+                <i data-feather="bar-chart-2" class="me-2"></i>
+                Exam Results
+            </h1>
+            <p class="text-muted mb-0">{{ exam.title }} - {{ exam.subject.name }}</p>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i data-feather="arrow-left" class="me-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ stats.total_attempts }}</h5>
+                    <p class="card-text text-muted">Total Attempts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="trending-up" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ "%.1f"|format(stats.average_score) }}%</h5>
+                    <p class="card-text text-muted">Average Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="award" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ "%.1f"|format(stats.highest_score) }}%</h5>
+                    <p class="card-text text-muted">Highest Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="trending-down" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ "%.1f"|format(stats.lowest_score) }}%</h5>
+                    <p class="card-text text-muted">Lowest Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="check-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ "%.1f"|format(stats.pass_rate) }}%</h5>
+                    <p class="card-text text-muted">Pass Rate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="clock" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ exam.duration_minutes }}</h5>
+                    <p class="card-text text-muted">Duration (min)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="list" class="me-2"></i>
+                        Student Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Score</th>
+                                        <th>Grade</th>
+                                        <th>Time Taken</th>
+                                        <th>Submission Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in sessions %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if session.student.profile_image_url %}
+                                                        <img src="{{ session.student.profile_image_url }}" 
+                                                             alt="Profile" class="rounded-circle me-2" 
+                                                             width="32" height="32" style="object-fit: cover;">
+                                                    {% else %}
+                                                        <i data-feather="user" class="me-2"></i>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ session.student.first_name or session.student.email }}</strong>
+                                                        {% if session.student.email %}
+                                                            <br><small class="text-muted">{{ session.student.email }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress me-2" style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar 
+                                                                    {% if session.score >= 90 %}bg-success
+                                                                    {% elif session.score >= 80 %}bg-info
+                                                                    {% elif session.score >= 70 %}bg-warning
+                                                                    {% elif session.score >= 60 %}bg-primary
+                                                                    {% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ session.score }}%"></div>
+                                                    </div>
+                                                    <strong>{{ "%.1f"|format(session.score) }}%</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if session.score >= 90 %}
+                                                    <span class="badge bg-success">A+</span>
+                                                {% elif session.score >= 80 %}
+                                                    <span class="badge bg-info">A</span>
+                                                {% elif session.score >= 70 %}
+                                                    <span class="badge bg-warning">B</span>
+                                                {% elif session.score >= 60 %}
+                                                    <span class="badge bg-primary">C</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">F</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.end_time %}
+                                                    {% set duration = (session.end_time - session.start_time).total_seconds() / 60 %}
+                                                    {{ "%.0f"|format(duration) }} min
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.end_time %}
+                                                    {{ session.end_time.strftime('%Y-%m-%d %H:%M') }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.is_evaluated %}
+                                                    <span class="badge bg-success">
+                                                        <i data-feather="check" style="width: 12px; height: 12px;"></i>
+                                                        Evaluated
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i data-feather="clock" style="width: 12px; height: 12px;"></i>
+                                                        Pending
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="users" class="mb-3" style="width: 48px; height: 48px; color: var(--bs-secondary);"></i>
+                            <h6>No submissions yet</h6>
+                            <p class="text-muted">
+                                {% if not exam.is_published %}
+                                    This exam is not published yet. Publish it to allow students to take it.
+                                {% else %}
+                                    Students haven't taken this exam yet. Share the exam link with your students.
+                                {% endif %}
+                            </p>
+                            {% if not exam.is_published %}
+                                <a href="{{ url_for('publish_exam', exam_id=exam.id) }}" class="btn btn-primary">
+                                    <i data-feather="eye" class="me-2"></i>
+                                    Publish Exam
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Distribution Chart -->
+    {% if sessions %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Score Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="scoreChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Grade Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="gradeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if sessions %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Score Distribution Chart
+    const scores = {{ sessions|map(attribute='score')|list|tojson }};
+    const scoreRanges = ['0-59', '60-69', '70-79', '80-89', '90-100'];
+    const scoreCounts = [0, 0, 0, 0, 0];
+    
+    scores.forEach(score => {
+        if (score < 60) scoreCounts[0]++;
+        else if (score < 70) scoreCounts[1]++;
+        else if (score < 80) scoreCounts[2]++;
+        else if (score < 90) scoreCounts[3]++;
+        else scoreCounts[4]++;
+    });
+    
+    new Chart(document.getElementById('scoreChart'), {
+        type: 'bar',
+        data: {
+            labels: scoreRanges,
+            datasets: [{
+                label: 'Number of Students',
+                data: scoreCounts,
+                backgroundColor: [
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(13, 110, 253, 0.8)', 
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(13, 202, 240, 0.8)',
+                    'rgba(25, 135, 84, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(220, 53, 69)',
+                    'rgb(13, 110, 253)',
+                    'rgb(255, 193, 7)',
+                    'rgb(13, 202, 240)',
+                    'rgb(25, 135, 84)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Grade Distribution Chart
+    const grades = ['F', 'C', 'B', 'A', 'A+'];
+    new Chart(document.getElementById('gradeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: grades,
+            datasets: [{
+                data: scoreCounts,
+                backgroundColor: [
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(13, 110, 253, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(13, 202, 240, 0.8)',
+                    'rgba(25, 135, 84, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

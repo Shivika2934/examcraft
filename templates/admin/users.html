@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i data-feather="users" class="me-2"></i>
+            User Management
+        </h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i data-feather="arrow-left" class="me-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ users|length }}</h5>
+                    <p class="card-text text-muted">Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="settings" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h5>
+                    <p class="card-text text-muted">Administrators</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i data-feather="user" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <h5 class="card-title">{{ users|selectattr('role', 'equalto', 'student')|list|length }}</h5>
+                    <p class="card-text text-muted">Students</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">All Users</h5>
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user.profile_image_url %}
+                                                <img src="{{ user.profile_image_url }}" alt="Profile" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                            {% else %}
+                                                <i data-feather="user" class="me-2"></i>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ user.first_name or 'Unknown' }} {{ user.last_name or '' }}</strong>
+                                                {% if user.id == current_user.id %}
+                                                    <small class="text-primary">(You)</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email or 'No email' }}</td>
+                                    <td>
+                                        <span class="badge {% if user.role == 'admin' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                            {% if user.role == 'admin' %}
+                                                <i data-feather="settings" class="me-1" style="width: 12px; height: 12px;"></i>
+                                            {% else %}
+                                                <i data-feather="user" class="me-1" style="width: 12px; height: 12px;"></i>
+                                            {% endif %}
+                                            {{ user.role.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Unknown' }}</td>
+                                    <td>
+                                        {% if user.id != current_user.id %}
+                                            <form method="POST" action="{{ url_for('toggle_user_role', user_id=user.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn btn-sm {% if user.role == 'admin' %}btn-outline-secondary{% else %}btn-outline-primary{% endif %}" 
+                                                        onclick="return confirm('Are you sure you want to change this user\'s role?')">
+                                                    {% if user.role == 'admin' %}
+                                                        <i data-feather="user" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                        Make Student
+                                                    {% else %}
+                                                        <i data-feather="settings" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                        Make Admin
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <small class="text-muted">Cannot modify own role</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="users" class="mb-3" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+                    <p class="text-muted">No users found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Help Text -->
+    <div class="mt-4">
+        <div class="alert alert-info">
+            <i data-feather="info" class="me-2"></i>
+            <strong>Role Management:</strong> 
+            <ul class="mb-0 mt-2">
+                <li><strong>Administrators</strong> can create exams, manage questions, view results, and manage users</li>
+                <li><strong>Students</strong> can take exams, view their results, and access study materials</li>
+                <li>You cannot change your own role for security reasons</li>
+                <li>New users are automatically assigned as students by default</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

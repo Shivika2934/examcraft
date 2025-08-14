@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Exam Results - {{ exam_session.exam.title }} - AI Exam System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>
+                <i data-feather="award" class="me-2"></i>
+                Exam Results
+            </h1>
+            <p class="text-muted mb-0">{{ exam_session.exam.title }} - {{ exam_session.exam.subject.name }}</p>
+        </div>
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+            <i data-feather="arrow-left" class="me-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Score Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{% if exam_session.score >= 80 %}success{% elif exam_session.score >= 60 %}warning{% else %}danger{% endif %}">
+                <div class="card-body text-center">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="score-display">
+                                <div class="score-circle 
+                                            {% if exam_session.score >= 90 %}text-success
+                                            {% elif exam_session.score >= 80 %}text-info
+                                            {% elif exam_session.score >= 70 %}text-warning
+                                            {% elif exam_session.score >= 60 %}text-primary
+                                            {% else %}text-danger{% endif %}">
+                                    {{ "%.0f"|format(exam_session.score) }}%
+                                </div>
+                                <h5 class="mt-2 mb-0">Final Score</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="result-stat">
+                                <i data-feather="award" class="mb-2" style="width: 32px; height: 32px;"></i>
+                                <h6>
+                                    {% if exam_session.score >= 90 %}
+                                        <span class="badge bg-success fs-6">A+</span>
+                                    {% elif exam_session.score >= 80 %}
+                                        <span class="badge bg-info fs-6">A</span>
+                                    {% elif exam_session.score >= 70 %}
+                                        <span class="badge bg-warning fs-6">B</span>
+                                    {% elif exam_session.score >= 60 %}
+                                        <span class="badge bg-primary fs-6">C</span>
+                                    {% else %}
+                                        <span class="badge bg-danger fs-6">F</span>
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">Grade</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="result-stat">
+                                <i data-feather="check-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                                <h6>
+                                    {% set correct_answers = answer_lookup.values()|selectattr('is_correct', 'equalto', True)|list|length %}
+                                    {{ correct_answers }} / {{ questions|length }}
+                                </h6>
+                                <small class="text-muted">Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="result-stat">
+                                <i data-feather="clock" class="mb-2" style="width: 32px; height: 32px;"></i>
+                                <h6>
+                                    {% if exam_session.end_time %}
+                                        {% set duration = (exam_session.end_time - exam_session.start_time).total_seconds() / 60 %}
+                                        {{ "%.0f"|format(duration) }}m
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">Time Taken</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="result-stat">
+                                <i data-feather="calendar" class="mb-2" style="width: 32px; height: 32px;"></i>
+                                <h6>{{ exam_session.end_time.strftime('%B %d, %Y') if exam_session.end_time else '-' }}</h6>
+                                <small class="text-muted">Completed On</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i data-feather="pie-chart" class="me-2"></i>
+                        Answer Breakdown
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set correct_count = answer_lookup.values()|selectattr('is_correct', 'equalto', True)|list|length %}
+                    {% set incorrect_count = answer_lookup.values()|selectattr('is_correct', 'equalto', False)|list|length %}
+                    {% set unanswered_count = questions|length - answer_lookup|length %}
+                    
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {{ (correct_count / questions|length * 100)|round(1) }}%"
+                             title="Correct: {{ correct_count }}">
+                            {{ correct_count }}
+                        </div>
+                        <div class="progress-bar bg-danger" 
+                             role="progressbar" 
+                             style="width: {{ (incorrect_count / questions|length * 100)|round(1) }}%"
+                             title="Incorrect: {{ incorrect_count }}">
+                            {{ incorrect_count }}
+                        </div>
+                        <div class="progress-bar bg-secondary" 
+                             role="progressbar" 
+                             style="width: {{ (unanswered_count / questions|length * 100)|round(1) }}%"
+                             title="Unanswered: {{ unanswered_count }}">
+                            {{ unanswered_count }}
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="legend-color bg-success me-2"></div>
+                                <span>{{ correct_count }} Correct</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="legend-color bg-danger me-2"></div>
+                                <span>{{ incorrect_count }} Incorrect</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="legend-color bg-secondary me-2"></div>
+                                <span>{{ unanswered_count }} Unanswered</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i data-feather="info" class="me-2"></i>
+                        Exam Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Subject:</strong></td>
+                            <td>{{ exam_session.exam.subject.name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Difficulty:</strong></td>
+                            <td>
+                                <span class="badge bg-{% if exam_session.exam.difficulty_level == 'easy' %}success{% elif exam_session.exam.difficulty_level == 'medium' %}warning{% else %}danger{% endif %}">
+                                    {{ exam_session.exam.difficulty_level.title() }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Questions:</strong></td>
+                            <td>{{ questions|length }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Duration:</strong></td>
+                            <td>{{ exam_session.exam.duration_minutes }} minutes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Started:</strong></td>
+                            <td>{{ exam_session.start_time.strftime('%H:%M on %B %d, %Y') }}</td>
+                        </tr>
+                        {% if exam_session.end_time %}
+                        <tr>
+                            <td><strong>Completed:</strong></td>
+                            <td>{{ exam_session.end_time.strftime('%H:%M on %B %d, %Y') }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Question Review -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="list" class="me-2"></i>
+                        Detailed Question Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for question in questions %}
+                        {% set answer = answer_lookup.get(question.id) %}
+                        <div class="question-review mb-4 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h6 class="mb-0">Question {{ loop.index }}</h6>
+                                <div class="d-flex align-items-center">
+                                    {% if answer %}
+                                        {% if answer.is_correct == True %}
+                                            <span class="badge bg-success me-2">
+                                                <i data-feather="check" style="width: 12px; height: 12px;"></i>
+                                                Correct
+                                            </span>
+                                        {% elif answer.is_correct == False %}
+                                            <span class="badge bg-danger me-2">
+                                                <i data-feather="x" style="width: 12px; height: 12px;"></i>
+                                                Incorrect
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning me-2">
+                                                <i data-feather="clock" style="width: 12px; height: 12px;"></i>
+                                                Under Review
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary me-2">
+                                            <i data-feather="minus" style="width: 12px; height: 12px;"></i>
+                                            Not Answered
+                                        </span>
+                                    {% endif %}
+                                    <span class="badge bg-info">{{ question.points }} point{{ 's' if question.points != 1 else '' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="question-text mb-3">
+                                {{ question.question_text }}
+                            </div>
+                            
+                            {% if question.question_type == 'multiple_choice' %}
+                                <div class="options">
+                                    {% set options = [
+                                        ('A', question.option_a),
+                                        ('B', question.option_b),
+                                        ('C', question.option_c),
+                                        ('D', question.option_d)
+                                    ] %}
+                                    {% for option_key, option_text in options %}
+                                        {% if option_text %}
+                                            <div class="option-item p-2 mb-2 rounded 
+                                                        {% if option_key == question.correct_answer %}bg-success bg-opacity-25 border border-success
+                                                        {% elif answer and answer.student_answer == option_key and option_key != question.correct_answer %}bg-danger bg-opacity-25 border border-danger
+                                                        {% else %}bg-light bg-opacity-10{% endif %}">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="option-indicator me-3">
+                                                        {% if option_key == question.correct_answer %}
+                                                            <i data-feather="check-circle" class="text-success"></i>
+                                                        {% elif answer and answer.student_answer == option_key and option_key != question.correct_answer %}
+                                                            <i data-feather="x-circle" class="text-danger"></i>
+                                                        {% elif answer and answer.student_answer == option_key %}
+                                                            <i data-feather="check-circle" class="text-success"></i>
+                                                        {% else %}
+                                                            <div class="option-circle"></div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <strong>{{ option_key }}.</strong> {{ option_text }}
+                                                        {% if option_key == question.correct_answer %}
+                                                            <span class="badge bg-success ms-2">Correct Answer</span>
+                                                        {% endif %}
+                                                        {% if answer and answer.student_answer == option_key %}
+                                                            <span class="badge bg-primary ms-2">Your Answer</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% elif question.question_type == 'true_false' %}
+                                <div class="options">
+                                    {% for option in ['True', 'False'] %}
+                                        <div class="option-item p-2 mb-2 rounded 
+                                                    {% if option == question.correct_answer %}bg-success bg-opacity-25 border border-success
+                                                    {% elif answer and answer.student_answer == option and option != question.correct_answer %}bg-danger bg-opacity-25 border border-danger
+                                                    {% else %}bg-light bg-opacity-10{% endif %}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="option-indicator me-3">
+                                                    {% if option == question.correct_answer %}
+                                                        <i data-feather="check-circle" class="text-success"></i>
+                                                    {% elif answer and answer.student_answer == option and option != question.correct_answer %}
+                                                        <i data-feather="x-circle" class="text-danger"></i>
+                                                    {% elif answer and answer.student_answer == option %}
+                                                        <i data-feather="check-circle" class="text-success"></i>
+                                                    {% else %}
+                                                        <div class="option-circle"></div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <strong>{{ option }}</strong>
+                                                    {% if option == question.correct_answer %}
+                                                        <span class="badge bg-success ms-2">Correct Answer</span>
+                                                    {% endif %}
+                                                    {% if answer and answer.student_answer == option %}
+                                                        <span class="badge bg-primary ms-2">Your Answer</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% elif question.question_type == 'short_answer' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Your Answer:</h6>
+                                        <div class="p-3 bg-light bg-opacity-10 rounded">
+                                            {% if answer and answer.student_answer %}
+                                                {{ answer.student_answer }}
+                                            {% else %}
+                                                <em class="text-muted">No answer provided</em>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if question.correct_answer %}
+                                    <div class="col-md-6">
+                                        <h6>Sample Answer:</h6>
+                                        <div class="p-3 bg-success bg-opacity-10 rounded border border-success">
+                                            {{ question.correct_answer }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if answer and answer.points_earned is not none %}
+                                <div class="points-earned mt-3">
+                                    <strong>Points Earned:</strong> 
+                                    {{ answer.points_earned }} / {{ question.points }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary me-3">
+                <i data-feather="home" class="me-2"></i>
+                Back to Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i data-feather="printer" class="me-2"></i>
+                Print Results
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize feather icons
+    feather.replace();
+    
+    // Print optimization
+    window.addEventListener('beforeprint', function() {
+        document.body.classList.add('print-mode');
+    });
+    
+    window.addEventListener('afterprint', function() {
+        document.body.classList.remove('print-mode');
+    });
+</script>
+{% endblock %}

@@ -1,4 +1,6 @@
 https://cdad7ef9-7626-4c49-a658-e9416bb6b830-00-1uq08hnlem0q7.picard.replit.dev/
+<img width="1377" height="534" alt="question2" src="https://github.com/user-attachments/assets/1b4593aa-0990-451c-973d-9790fc262958" />
+
 <img width="1199" height="639" alt="image" src="https://github.com/user-attachments/assets/66efc807-7468-444d-91a1-4a5e7c0c09e8" />
 student dashboard:
 <img width="1194" height="623" alt="image" src="https://github.com/user-attachments/assets/db236e14-68d7-4bd6-906b-8016e234938a" />

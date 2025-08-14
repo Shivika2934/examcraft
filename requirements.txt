@@ -1,0 +1,8 @@
+Flask
+flask_sqlalchemy
+sqlalchemy
+flask_login
+flask_dance
+openai
+psycopg2-binary  # if using Postgres
+gunicorn
